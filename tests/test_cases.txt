@@ -1,45 +1,14 @@
-﻿CAMPUS STORE MANAGEMENT SYSTEM
-TEST CASES
+﻿CAMPUS STORE MANAGEMENT SYSTEM - TEST CASES
 
-T1: Book category pricing
-Input: Rs.500
-Expected: Rs.450
-
-T2: Accessory category pricing
-Input: Rs.800
-Expected: Rs.840
-
-T3: Stationery category pricing
-Input: Rs.200
-Expected: Rs.190
-
-T4: Book discount
-Input: 10%
-Expected: Rs.405
-
-T5: Accessory discount and coupon
-Input: 10% discount, Rs.20 coupon
-Expected: Rs.736
-
-T6: Stationery discount
-Input: 10%
-Expected: Rs.171
-
-T7: Bill addition
-Input: Rs.405 + Rs.736
-Expected: Rs.1141
-
-T8: Coupon greater than payable amount
-Expected: Rs.0
-
-T9: Invalid percentage discount
-Expected: -1
-
-T10: Live product count
-Expected: 3
-
-T11: Negative price
-Expected: Invalid
-
-T12: Duplicate product ID
-Expected: Invalid
+TC01: Book price 500 -> 450
+TC02: Accessory price 800 -> 840
+TC03: Stationery price 200 -> 190
+TC04: Book after 10% discount -> 405
+TC05: Accessory after 10% discount and Rs.20 coupon -> 736
+TC06: Coupon greater than amount -> 0
+TC07: Discount above 100% -> Rejected
+TC08: Negative coupon -> Rejected
+TC09: Negative product price -> Rejected
+TC10: Zero product price -> Accepted
+TC11: Duplicate ID -> Rejected
+TC12: Bill addition -> 1141

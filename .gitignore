@@ -2,5 +2,10 @@
 *.o
 *.obj
 *.out
-*.log
+*.pdb
 .vscode/
+.idea/
+*.log
+*.tmp
+active-policy.cip
+active-policy.xml
