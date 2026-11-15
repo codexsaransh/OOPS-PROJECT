@@ -1,304 +1,209 @@
 ﻿#include <stdio.h>
 #include <string.h>
-#include <math.h>
 
-#define MAX_PRODUCTS 100
-
-#define BOOK 1
-#define ACCESSORY 2
-#define STATIONERY 3
+#define MAX 100
 
 typedef struct {
-    int id;
+    int id, category;
     char name[100];
-    double basePrice;
-    int category;
+    double price, percent, coupon, finalAmount;
 } Product;
 
-Product products[MAX_PRODUCTS];
-int productCount = 0;
+Product products[MAX];
+int count = 0;
 
-int passed = 0;
-int failed = 0;
-
-/* Check whether price is valid */
-int isValidPrice(double price) {
-    return price >= 0;
+double categoryPrice(Product p) {
+    if (p.category == 1) return p.price * 0.90;
+    if (p.category == 2) return p.price * 1.05;
+    if (p.category == 3) return p.price * 0.95;
+    return -1;
 }
 
-/* Check unique product ID */
-int isUniqueID(int id) {
-    int i;
-
-    for (i = 0; i < productCount; i++) {
-        if (products[i].id == id)
-            return 0;
-    }
-
-    return 1;
-}
-
-/* Register product */
-int registerProduct(Product p) {
-
-    if (p.id <= 0) {
-        printf("Error: Invalid product ID.\n");
-        return 0;
-    }
-
-    if (!isValidPrice(p.basePrice)) {
-        printf("Error: Negative price not allowed.\n");
-        return 0;
-    }
-
-    if (!isUniqueID(p.id)) {
-        printf("Error: Duplicate product ID.\n");
-        return 0;
-    }
-
-    if (p.category < BOOK || p.category > STATIONERY) {
-        printf("Error: Invalid category.\n");
-        return 0;
-    }
-
-    if (productCount >= MAX_PRODUCTS) {
-        printf("Error: Product storage full.\n");
-        return 0;
-    }
-
-    products[productCount++] = p;
-
-    return 1;
-}
-
-/* Calculate category-based price */
-double finalPrice(Product p) {
-
-    switch (p.category) {
-
-        case BOOK:
-            return p.basePrice * 0.90;
-
-        case ACCESSORY:
-            return p.basePrice * 1.05;
-
-        case STATIONERY:
-            return p.basePrice * 0.95;
-
-        default:
-            return -1;
-    }
-}
-
-/* Apply percentage discount */
-double discount(Product p, double percent) {
-
-    double amount;
-
-    if (percent < 0 || percent > 100)
-        return -1;
-
-    amount = finalPrice(p);
-
-    if (amount < 0)
-        return -1;
-
-    return amount * (1 - percent / 100.0);
-}
-
-/* Apply percentage discount and coupon */
-double couponDiscount(Product p, double percent, double coupon) {
-
-    double amount;
-
-    if (coupon < 0)
-        return -1;
-
-    amount = discount(p, percent);
-
-    if (amount < 0)
-        return -1;
-
-    amount -= coupon;
-
+double calculateDiscount(Product p) {
+    double amount = categoryPrice(p);
+    amount -= amount * p.percent / 100;
+    amount -= p.coupon;
     return amount > 0 ? amount : 0;
 }
 
-/* Product audit */
-void auditProduct(Product p) {
-
-    printf("Audit: ID = %d | Name = %s\n", p.id, p.name);
+int uniqueID(int id) {
+    int i;
+    for (i = 0; i < count; i++)
+        if (products[i].id == id) return 0;
+    return 1;
 }
 
-/* Display product details */
-void displayProduct(Product p) {
-
-    printf("\nProduct ID: %d", p.id);
-    printf("\nProduct Name: %s", p.name);
-    printf("\nBase Price: Rs. %.2f", p.basePrice);
-    printf("\nCategory Price: Rs. %.2f\n", finalPrice(p));
+void audit(Product p) {
+    printf("Audit: ID=%d | Name=%s\n", p.id, p.name);
 }
 
-/* Calculate bill */
-double calculateBill(double amount1, double amount2) {
+void addProduct() {
+    Product p;
 
-    return amount1 + amount2;
+    if (count >= MAX) {
+        printf("Product limit reached!\n");
+        return;
+    }
+
+    printf("\nEnter Product ID: ");
+    if (scanf("%d", &p.id) != 1) return;
+
+    if (p.id <= 0 || !uniqueID(p.id)) {
+        printf("Invalid or duplicate ID!\n");
+        return;
+    }
+
+    printf("Enter Product Name: ");
+    scanf(" %99[^\n]", p.name);
+
+    printf("Enter Category (1.Book 2.Accessory 3.Stationery): ");
+    if (scanf("%d", &p.category) != 1) return;
+
+    if (p.category < 1 || p.category > 3) {
+        printf("Invalid category!\n");
+        return;
+    }
+
+    printf("Enter Base Price: ");
+    if (scanf("%lf", &p.price) != 1) return;
+
+    if (p.price < 0) {
+        printf("Price cannot be negative!\n");
+        return;
+    }
+
+    printf("Enter Discount Percentage: ");
+    if (scanf("%lf", &p.percent) != 1) return;
+
+    if (p.percent < 0 || p.percent > 100) {
+        printf("Invalid discount!\n");
+        return;
+    }
+
+    printf("Enter Coupon Amount (0 if none): ");
+    if (scanf("%lf", &p.coupon) != 1) return;
+
+    if (p.coupon < 0) {
+        printf("Invalid coupon!\n");
+        return;
+    }
+
+    p.finalAmount = calculateDiscount(p);
+    products[count++] = p;
+
+    printf("\nProduct registered successfully!\n");
 }
 
-/* Test result */
-void testResult(const char *name, int condition) {
+void displayProducts() {
+    int i;
 
-    if (condition) {
-        printf("[PASS] %s\n", name);
-        passed++;
-    } else {
-        printf("[FAIL] %s\n", name);
-        failed++;
+    if (count == 0) {
+        printf("\nNo products registered.\n");
+        return;
+    }
+
+    printf("\n========== PRODUCT DETAILS ==========\n");
+
+    for (i = 0; i < count; i++) {
+        printf("\nID: %d", products[i].id);
+        printf("\nName: %s", products[i].name);
+        printf("\nBase Price: Rs. %.2f", products[i].price);
+        printf("\nCategory Price: Rs. %.2f",
+               categoryPrice(products[i]));
+        printf("\nDiscount: %.2f%%", products[i].percent);
+        printf("\nCoupon: Rs. %.2f", products[i].coupon);
+        printf("\nFinal Price: Rs. %.2f\n",
+               products[i].finalAmount);
     }
 }
 
-/* Compare floating-point values */
-int equal(double a, double b) {
+void generateBill() {
+    int i;
+    double total = 0;
 
-    return fabs(a - b) < 0.001;
+    if (count == 0) {
+        printf("\nNo products available for billing.\n");
+        return;
+    }
+
+    printf("\n========== FINAL BILL ==========\n");
+
+    for (i = 0; i < count; i++) {
+        printf("%s : Rs. %.2f\n",
+               products[i].name,
+               products[i].finalAmount);
+
+        total += products[i].finalAmount;
+    }
+
+    printf("--------------------------------\n");
+    printf("GRAND TOTAL: Rs. %.2f\n", total);
 }
 
-/* Automated testing */
 void runTests() {
+    Product b = {1, 1, "Book", 500, 10, 0, 0};
+    Product a = {2, 2, "Accessory", 800, 10, 20, 0};
+    Product s = {3, 3, "Stationery", 200, 10, 0, 0};
 
-    Product book = {101, "C++ Textbook", 500, BOOK};
-    Product accessory = {202, "USB Mouse", 800, ACCESSORY};
-    Product stationery = {303, "Pen Set", 200, STATIONERY};
+    printf("\n========== BASIC TESTS ==========\n");
 
-    Product invalid = {404, "Invalid", -100, BOOK};
-    Product zero = {405, "Zero Price", 0, BOOK};
-
-    printf("\n====================================\n");
-    printf("          AUTOMATED TESTS\n");
-    printf("====================================\n");
-
-    testResult("Book category pricing",
-               equal(finalPrice(book), 450));
-
-    testResult("Accessory category pricing",
-               equal(finalPrice(accessory), 840));
-
-    testResult("Stationery category pricing",
-               equal(finalPrice(stationery), 190));
-
-    testResult("Percentage discount",
-               equal(discount(book, 10), 405));
-
-    testResult("Percentage plus coupon",
-               equal(couponDiscount(accessory, 10, 20), 736));
-
-    testResult("Coupon greater than amount",
-               equal(couponDiscount(book, 10, 500), 0));
-
-    testResult("Invalid discount percentage",
-               equal(discount(book, 150), -1));
-
-    testResult("Negative price validation",
-               !isValidPrice(-100));
-
-    testResult("Zero price validation",
-               isValidPrice(0));
-
-    testResult("Bill addition",
-               equal(calculateBill(
-                   discount(book, 10),
-                   couponDiscount(accessory, 10, 20)
-               ), 1141));
-
-    testResult("Product registration",
-               registerProduct(book));
-
-    testResult("Duplicate ID rejection",
-               !registerProduct(book));
-
-    testResult("Negative price registration rejection",
-               !registerProduct(invalid));
-
-    testResult("Zero price registration",
-               registerProduct(zero));
-
-    printf("\nTests Passed: %d\n", passed);
-    printf("Tests Failed: %d\n", failed);
-
-    printf("====================================\n");
+    printf("Book expected 405: %.2f\n", calculateDiscount(b));
+    printf("Accessory expected 736: %.2f\n", calculateDiscount(a));
+    printf("Stationery expected 171: %.2f\n", calculateDiscount(s));
 }
 
-/* Main function */
 int main() {
-
-    Product book = {101, "C++ Textbook", 500, BOOK};
-    Product accessory = {202, "USB Mouse", 800, ACCESSORY};
-    Product stationery = {303, "Pen Set", 200, STATIONERY};
-
-    double bookAmount;
-    double accessoryAmount;
-    double stationeryAmount;
-    double total;
+    int choice;
 
     printf("====================================\n");
-    printf("    CAMPUS STORE MANAGEMENT SYSTEM\n");
+    printf("   CAMPUS STORE MANAGEMENT SYSTEM\n");
     printf("       PROCEDURAL C VERSION\n");
     printf("====================================\n");
 
-    registerProduct(book);
-    registerProduct(accessory);
-    registerProduct(stationery);
+    do {
+        printf("\n1. Add Product");
+        printf("\n2. Display Products");
+        printf("\n3. Generate Bill");
+        printf("\n4. Product Audit");
+        printf("\n5. Run Basic Tests");
+        printf("\n0. Exit");
+        printf("\nEnter Choice: ");
 
-    printf("\n---------- PRODUCT DETAILS ----------\n");
+        if (scanf("%d", &choice) != 1) break;
 
-    {
-        int i;
+        switch (choice) {
+            case 1:
+                addProduct();
+                break;
 
-        for (i = 0; i < productCount; i++)
-            displayProduct(products[i]);
-    }
+            case 2:
+                displayProducts();
+                break;
 
-    bookAmount = discount(book, 10);
+            case 3:
+                generateBill();
+                break;
 
-    accessoryAmount = couponDiscount(accessory, 10, 20);
+            case 4: {
+                int i;
+                for (i = 0; i < count; i++)
+                    audit(products[i]);
+                break;
+            }
 
-    stationeryAmount = discount(stationery, 10);
+            case 5:
+                runTests();
+                break;
 
-    printf("\n---------- DISCOUNT DETAILS ----------\n");
+            case 0:
+                printf("\nThank you for using the system!\n");
+                break;
 
-    printf("Book after 10%% discount: Rs. %.2f\n",
-           bookAmount);
+            default:
+                printf("\nInvalid choice!\n");
+        }
 
-    printf("Accessory after 10%% discount and Rs.20 coupon: Rs. %.2f\n",
-           accessoryAmount);
-
-    printf("Stationery after 10%% discount: Rs. %.2f\n",
-           stationeryAmount);
-
-    printf("\n---------- BILL GENERATION ----------\n");
-
-    total = calculateBill(bookAmount, accessoryAmount);
-
-    printf("Book Amount: Rs. %.2f\n", bookAmount);
-
-    printf("Accessory Amount: Rs. %.2f\n", accessoryAmount);
-
-    printf("Grand Total: Rs. %.2f\n", total);
-
-    printf("\n---------- PRODUCT AUDIT ----------\n");
-
-    {
-        int i;
-
-        for (i = 0; i < productCount; i++)
-            auditProduct(products[i]);
-    }
-
-    runTests();
-
-    printf("\n====================================\n");
-    printf("        PROGRAM COMPLETED\n");
-    printf("====================================\n");
+    } while (choice != 0);
 
     return 0;
 }
